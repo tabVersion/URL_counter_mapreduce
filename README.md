@@ -21,8 +21,7 @@ PingCap interview
             case task := <-tasks:
                 go func() {
                     worker := <-registerChan
-                    status := call(worker, "Worker.DoTask",
-                                   constructTaskArgs(phase, task), nil)
+                    status := call(worker, "Worker.DoTask", constructTaskArgs(phase, task), nil)
                     if status {
                         success <- 1
                         go func() { registerChan <- worker }()
@@ -41,19 +40,19 @@ PingCap interview
 
 ## 每日总结
 
-- 2.12
+- 2.12  
     明确目标是计算10GB的数据中出现次数top100的URL，但是可用的内存只有1GB，显然需要使用外存，迅速想到之前接触过的mapreduce。在MIT 6.824的课程中曾经进行过word count的实现，且在mapreduce的论文中明确提到这样的技术可以进行URL count
     复习了论文并选择6.824的lab 1作为code base，主要使用其的单元测试和线程间调用部分
     完成6.824 lab 1的map/reduce部分并通过其单元测试
-- 2.13
+- 2.13  
     完成lab 1的其余部分，包括单一worker的word count和分布式情况下worker调用，并通过其单元测试。（分布式通过rpc进行模拟）
   - 改进schedule的任务分配部分。取消了任务分配通道(chan)的缓存，通过两方都准备好才发生通信的特性完成任务分配
   - 改进schedule的线程同步部分。通过统计成功完成的任务数量避免使用sync.WaitGroup()，简化程序结构
-- 2.14
+- 2.14  
     改动map部分以适应本次URL统计的需求。将每个URL作为统计的唯一键值，并生成测试数据，共八个文件，其中每个里面包含10000个随机生成的URL，为确保可以有重复的部分，统一使用3位(`https://www.xxx.com`)。顺利通过单一worker的测试，生成的数据中出现最多的URL出现了16次，期望为4.55次
     在进行分布式测试时发现在schedule中出现死循环，经过go race测试，发现在分配任务到每个worker时稳定出现线程阻塞情况，且每个线程均有相同情况
   - 没有成功debug
-- 2.15
+- 2.15  
     上午通过打log的方式推测其中call函数在包装rpc.Dial时出现问题，在同步调用时因为某些问题导致阻塞，使主线程处于挂起状态，但是在查阅文档后发现此处正常
     下午继续尝试发现此处的阻塞产生于registerChan中没有数据导致所有的线程都在等待通道内容（即worker的rpc地址）。
     通过调用检测发现此处产生了死锁: 产生于schedule(mapreduce/schedule.go)和forwardRegistrations(mapreduce/master.go)
