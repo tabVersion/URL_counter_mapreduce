@@ -8,12 +8,12 @@
     - 若为 true 则输出 debug 的打印信息，否则不输出。
 3. 运行src/main/main.sh 其输出即为正序的top100的URL
    - 参数解释  
-        |参数|解释|
-        |:---|:---|
-        |master|当前运行的为master节点|
-        |distributed|运行的为分布式模式（可替换为 sequential）|
-        |(sequential)|运行单线程模式（只有一个worker）**debug/测试使用**|
-        |data*.txt|输入的文件|
+        | 参数         | 解释                                               |
+        | :----------- | :------------------------------------------------- |
+        | master       | 当前运行的为master节点                             |
+        | distributed  | 运行的为分布式模式（可替换为 sequential）          |
+        | (sequential) | 运行单线程模式（只有一个worker）**debug/测试使用** |
+        | data*.txt    | 输入的文件                                         |
 
     `sort -n -k2 mrtmp.wcseq | tail -100` 用于对reducer输出的文件进行排序，并输出最后100条
     余下的部分用于清除中间文件
@@ -26,7 +26,7 @@
 
 ## 详设
 
-main/main.go
+### main/main.go
 
 - mapF
     将文件中的每个 URL 分离出来并处理成键值对
@@ -44,7 +44,7 @@ main/main.go
   - 返回值
     - (string)：统计values切片的元素个数并转换为string类型返回
 
-mapreduce/common.go
+### mapreduce/common.go
 
 - reduceName
     在 map 阶段完成时调用，返回处理的中间文件的文件名
@@ -62,7 +62,7 @@ mapreduce/common.go
   - 返回值
     - (string)：产生的文件名
 
-mapreduce/common_map.go
+### mapreduce/common_map.go
 
 - doMap
     处理 map 阶段任务，通过 mapF 得到对应的键值对并分类写入对应中间文件
@@ -70,7 +70,7 @@ mapreduce/common_map.go
     - jobName(string)：当前任务名
     - mapTask(int)：当前 map 任务的编号
     - inFile(string)：传入的文件名（单一文件）
-    - nReduce(int)：将进行 reduce 任务的机器数量
+    - nReduce(int)：将进行 reduce 任务的数量
     - mapF(func)：参数和返回值同 main/main.go/mapF
   - 无返回值
 - ihash
@@ -80,7 +80,7 @@ mapreduce/common_map.go
   - 返回值
     - (int)：当前 key 的 hash
 
-mapreduce/common_reduce.go
+### mapreduce/common_reduce.go
 
 - doReduce
     处理 reduce 阶段任务，合并相同 key 值的项并进行计数，写入结果文件
@@ -92,7 +92,7 @@ mapreduce/common_reduce.go
     - reduceF(func)：参数和返回值同 main/main.go/reduceF
   - 无返回值
 
-mapreduce/common_rpc.go
+### mapreduce/common_rpc.go
 
 - call
     包装 `rpc.Dail()` 并进行异常处理
@@ -104,7 +104,7 @@ mapreduce/common_rpc.go
   - 返回值
     - (bool)：是否成功进行通信（是否找到主机/通信中是否有错误）
 
-mapreduce/master.go
+### mapreduce/master.go
 
 - newMaster
     master 节点的初始化
@@ -117,7 +117,7 @@ mapreduce/master.go
   - 参数
     - jobName(string)：当前任务名
     - files([]string)：所有传入的文件名
-    - nreduce(int)：进行 reduce 任务的机器数量
+    - nreduce(int)：进行 reduce 任务的数量
     - mapF(func)：参数和返回值同 main/main.go/mapF
     - reduceF(func)：参数和返回值同 main/main.go/reduceF
   - 返回值
@@ -131,19 +131,19 @@ mapreduce/master.go
 - Distributed
     控制分布式情况下的部分任务（schedule 和 forwardRegistrations）
   - 参数
-    - jobName(string)
-    - files([]string)
-    - nreduce(int)
-    - master(string)
+    - jobName(string)：当前任务名
+    - files([]string)：所有输入的文件
+    - nreduce(int)：reduce 任务的数量
+    - master(string)：master 节点的 rpc 地址
   - 返回值
     - mr(*Master)：完成流程的 Master 对象
 - GoDistributed
     控制分布式状态下的 mapreduce 任务
   - 参数
-    - jobName(string)
-    - files([]string)
-    - nReduce(int)
-    - master(string)
+    - jobName(string)：当前任务名
+    - files([]string)：所有输入的文件
+    - nReduce(int)：reduce 任务的数量
+    - master(string)：master 节点的 rpc 地址
     - mapF(func)：参数和返回值同 main/main.go/mapF
     - reduceF(func)：参数和返回值同 main/main.go/reduceF
   - 返回值
@@ -154,7 +154,7 @@ mapreduce/master.go
   - 参数
     - jobName(string)：当前任务名
     - files([]string)：输入的所有文件
-    - nreduce(int)：执行 reduce 任务的机器数量
+    - nreduce(int)：执行 reduce 任务的数量
     - schedule(func)：参数和返回值同 mapreduce/schedule.go/schedule
     - finish(func)
         使用匿名函数，控制使所有 worker 下线并注销主机的 rpc 服务
@@ -169,4 +169,82 @@ mapreduce/master.go
   - 返回值
     - ([]int)：其中的每个元素代表对应 worker 完成任务的数量
 
-mapreduce/master_rpc.go
+### mapreduce/master_rpc.go
+
+- Shutdown
+    关闭 master 的 rpc 服务
+  - 参数
+    - _：无要求
+    - _ (*struct{})：调用时默认为 new(struct{}) 进行控制
+  - 返回值
+    - (error)：默认为 nil
+- stopRPCServer
+    通过 call 调用 Shutdown 函数，避免当前进程和 rpc 进程的竞争
+  - 无参数
+  - 无返回值
+- startRPCServer
+    开启 master 的 rpc 服务，持续接受 rpc 调用
+  - 无参数
+  - 无返回值
+
+### mapreduce/master_spiltmerge.go
+
+- merge
+    将多个 reduce 任务的结果合并为一个
+  - 无参数
+  - 无返回值
+- removeFile
+    清除执行时的的 log 信息和 error 记录
+  - 参数
+    - n(string)：删除文件的文件名
+  - 无返回值
+- CleanupFiles
+    清除 mapreduce 任务产生的中间文件
+  - 无参数
+  - 无返回值
+
+### mapreduce/schedule.go
+
+- schedule
+    负责分配 map/reduce 任务到每个 worker，当所有任务分配完成时返回
+    在 map 和 reduce 阶段各调用一次
+  - 参数
+    - jobName(string)：当前任务名
+    - mapFiles([]string)：进行 map 任务的所有文件
+    - nReduce(int)：reduce 任务的数量
+    - phase(jobPhase)：分配任务的阶段 (map/reduce)
+    - registerChan(chan string)：传入空闲 worker 的 rpc 地址的通道
+  - 无返回值
+
+### mapreduce/worker.go
+
+- DoTask
+    当此 worker 被分配任务时被 master 调用
+  - 参数
+    - arg(*DoTaskArgs)：分配任务的信息
+    - _ (*struct{})：空结构体
+  - 返回值
+    - (error)：执行过程中有无错误，默认为 nil
+- Shutdown
+    当所有任务完成时 master 调用，返回当前 worker 执行的所有任务总数
+    更改 rpc 连接上限（不允许 rpc 调用）
+  - 参数
+    - _ (*struct{})：无要求
+    - res(*ShutdownReply)：返回的参数
+  - 返回值
+    - (error)：错误信息，默认为 nil
+- register
+    worker 向 master 进行注册，表明当前空闲
+  - 参数
+    - master(string)：master 的 rpc 地址
+  - 无返回值
+- RunWorker
+    与 master 建立连接，等待任务
+  - 参数
+    - MasterAddress(string)：master 的 rpc 地址
+    - me(string)：当前节点的 rpc 地址
+    - MapFunc(func)：参数和返回值同 main/main.go/mapF
+    - ReduceFunc(func)：main/main.go/reduceF
+    - nRPC(int)：rpc 连接的上限
+    - parallelism(*Parallelism)：检查 worker 是否并行工作
+  - 无返回值
