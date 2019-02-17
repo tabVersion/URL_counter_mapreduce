@@ -8,13 +8,13 @@
     - 若为 true 则输出 debug 的打印信息，否则不输出。
 3. 运行src/main/main.sh 其输出即为正序的top100的URL
    - 参数解释  
-        | 参数         | 解释                                               |
-        | :----------- | :------------------------------------------------- |
-        | master       | 当前运行的为master节点                             |
-        | distributed  | 运行的为分布式模式（可替换为 sequential）          |
-        | (sequential) | 运行单线程模式（只有一个worker）**debug/测试使用** |
-        | data*.txt    | 输入的文件                                         |
-
+        | 参数         | 解释                                               |  
+        | :----------- | :------------------------------------------------- |  
+        | master       | 当前运行的为master节点                             |  
+        | distributed  | 运行的为分布式模式（可替换为 sequential）          |  
+        | (sequential) | 运行单线程模式（只有一个worker）**debug/测试使用** |  
+        | data*.txt    | 输入的文件                                         |  
+ 
     `sort -n -k2 mrtmp.wcseq | tail -100` 用于对reducer输出的文件进行排序，并输出最后100条
     余下的部分用于清除中间文件
 4. 单元测试（在`src/mapreduce` 目录下）  
