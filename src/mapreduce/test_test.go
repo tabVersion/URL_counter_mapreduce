@@ -117,8 +117,7 @@ func makeInputs(num int) []string {
 }
 
 // Cook up a unique-ish UNIX-domain socket name
-// in /var/tmp. can't use current directory since
-// AFS doesn't support UNIX-domain sockets.
+// in /var/tmp.
 func port(suffix string) string {
 	s := "/var/tmp/824-"
 	s += strconv.Itoa(os.Getuid()) + "/"
