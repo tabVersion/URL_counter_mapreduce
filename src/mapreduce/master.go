@@ -32,6 +32,20 @@ type Master struct {
 	stats    []int
 }
 
+// Register is an RPC method that is called by workers after they have started
+// up to report that they are ready to receive tasks.
+func (mr *Master) Register(args *RegisterArgs, _ *struct{}) error {
+	mr.Lock()
+	defer mr.Unlock()
+	debug("Register: worker %s\n", args.Worker)
+	mr.workers = append(mr.workers, args.Worker)
+
+	// tell forwardRegistrations() that there's a new workers[] entry.
+	mr.newCond.Broadcast()
+
+	return nil
+}
+
 // newMaster initializes a new Map/Reduce Master
 func newMaster(master string) (mr *Master) {
 	mr = new(Master)

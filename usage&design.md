@@ -20,10 +20,85 @@
     余下的部分用于清除中间文件
 4. 单元测试（在`src/mapreduce` 目录下）  
     均在 `src/mapreduce/test_test.go` 下实现
-   1. 测试基础的map/reduce功能  
-        `go test -run Sequential`
-   2. 测试多线程下的worker协同通信情况
-        `go test -run TestParallel`
+   1. 测试基础的map/reduce功能 `go test -run Sequential`
+
+    ```
+      $ go test -run Sequential
+      master: Starting Map/Reduce task test
+      Merge: read mrtmp.test-res-0
+      master: Map/Reduce task completed
+      master: Starting Map/Reduce task test
+      Merge: read mrtmp.test-res-0
+      Merge: read mrtmp.test-res-1
+      Merge: read mrtmp.test-res-2
+      master: Map/Reduce task completed
+      PASS
+      ok    mapreduce	1.913s
+    ```
+
+   2. 测试多线程下的worker协同通信情况 `go test -run TestParallel`
+
+    ```
+
+      $ go test -run TestParallel
+      2019/02/18 19:48:01 rpc.Register: method "CleanupFiles" has 1 input parameters; needs exactly three
+      2019/02/18 19:48:01 rpc.Register: method "Lock" has 1 input parameters; needs exactly three
+      2019/02/18 19:48:01 rpc.Register: method "Unlock" has 1 input parameters; needs exactly three
+      2019/02/18 19:48:01 rpc.Register: method "Wait" has 1 input parameters; needs exactly three
+      2019/02/18 19:48:01 rpc.Register: method "Lock" has 1 input parameters; needs exactly three
+      2019/02/18 19:48:01 rpc.Register: method "Unlock" has 1 input parameters; needs exactly three
+      /var/tmp/824-1000/mr7682-master: Starting Map/Reduce task test
+      Schedule: 20 mapPhase tasks (10 I/Os)
+      2019/02/18 19:48:01 rpc.Register: method "Lock" has 1 input parameters; needs exactly three
+      2019/02/18 19:48:01 rpc.Register: method "Unlock" has 1 input parameters; needs exactly three
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #1 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #2 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #3 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #4 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #5 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #6 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #7 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #8 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #9 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #10 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #11 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #12 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #13 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #14 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #15 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #16 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #17 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #18 done
+      /var/tmp/824-1000/mr7682-worker0: mapPhase task #19 done
+      /var/tmp/824-1000/mr7682-worker1: mapPhase task #0 done
+      Schedule: mapPhase done
+      Schedule: 10 reducePhase tasks (20 I/Os)
+      /var/tmp/824-1000/mr7682-worker0: reducePhase task #0 done
+      /var/tmp/824-1000/mr7682-worker1: reducePhase task #1 done
+      /var/tmp/824-1000/mr7682-worker0: reducePhase task #2 done
+      /var/tmp/824-1000/mr7682-worker1: reducePhase task #3 done
+      /var/tmp/824-1000/mr7682-worker1: reducePhase task #5 done
+      /var/tmp/824-1000/mr7682-worker0: reducePhase task #4 done
+      /var/tmp/824-1000/mr7682-worker1: reducePhase task #6 done
+      /var/tmp/824-1000/mr7682-worker0: reducePhase task #7 done
+      /var/tmp/824-1000/mr7682-worker1: reducePhase task #8 done
+      /var/tmp/824-1000/mr7682-worker0: reducePhase task #9 done
+      Schedule: reducePhase done
+      Merge: read mrtmp.test-res-0
+      Merge: read mrtmp.test-res-1
+      Merge: read mrtmp.test-res-2
+      Merge: read mrtmp.test-res-3
+      Merge: read mrtmp.test-res-4
+      Merge: read mrtmp.test-res-5
+      Merge: read mrtmp.test-res-6
+      Merge: read mrtmp.test-res-7
+      Merge: read mrtmp.test-res-8
+      Merge: read mrtmp.test-res-9
+      /var/tmp/824-1000/mr7682-master: Map/Reduce task completed
+      PASS
+      ok  	mapreduce	2.382s
+
+    ```
 
 ## 结构体定义
 

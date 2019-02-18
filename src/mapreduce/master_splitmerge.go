@@ -10,7 +10,6 @@ import (
 )
 
 // merge combines the results of the many reduce jobs into a single output file
-// XXX use merge sort
 func (mr *Master) merge() {
 	debug("Merge phase")
 	kvs := make(map[string]string)

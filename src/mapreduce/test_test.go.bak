@@ -1,22 +1,23 @@
 package mapreduce
 
 import (
-	"fmt"
-	"testing"
-	"time"
-
 	"bufio"
+	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+	"testing"
+	"time"
 )
 
 const (
 	nNumber = 100000
 	nMap    = 20
 	nReduce = 10
+	letterBytes = "abcdefghijklmnopqrstuvwxyz"
 )
 
 // Create input file with N numbers
@@ -107,7 +108,14 @@ func makeInputs(num int) []string {
 		}
 		w := bufio.NewWriter(file)
 		for i < (f+1)*(nNumber/num) {
-			fmt.Fprintf(w, "%d\n", i)
+			//fmt.Fprintf(w, "%d\n", i)
+			fmt.Fprintf(w, "https://%s.com ", func() string {
+				b := make([]byte, 3)
+				for i := range b {
+					b[i] = letterBytes[rand.Intn(len(letterBytes))]
+				}
+				return string(b)
+			}())
 			i++
 		}
 		w.Flush()

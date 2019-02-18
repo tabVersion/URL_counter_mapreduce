@@ -137,8 +137,6 @@ func RunWorker(MasterAddress string, me string,
 	}
 	wk.l = l
 	wk.register(MasterAddress)
-
-	// DON'T MODIFY CODE BELOW
 	for {
 		wk.Lock()
 		if wk.nRPC == 0 {
