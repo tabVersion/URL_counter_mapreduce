@@ -1,4 +1,4 @@
-# URL count mapreduce 使用说明 & 详设
+# URL_count_mapreduce 使用说明 & 详设
 
 ## 使用说明
 
@@ -25,19 +25,78 @@
    2. 测试多线程下的worker协同通信情况
         `go test -run TestParallel`
 
+## 结构体定义
+
+- <span id = "KeyValue">KeyValue</span>
+  用于构成键值对的结构体
+  - Key(string)：URL
+  - Value(string)：出现次数
+- <span id = "DoTaskArgs">DoTaskArgs</span>
+    master 向 worker 传递任务时的描述
+  - JobName(string)：当前任务名
+  - File(string)：仅在 map 阶段有效，输入的文件名
+  - Phase(jobPhase)：当前进行什么阶段的任务 map/reduce
+  - TaskNumber(int)：当前进行的任务编号
+- <span id = "ShutdownReply">ShutdownReply</span>
+    当前 worker 被关闭时返回的数据
+  - Ntasks(int)：当前 worker 完成的任务总数
+- <span id = "RegisterArgs">RegisterArgs</span>
+    worker 向 master 进行注册时发送的数据
+  - Worker(string)：worker 的 rpc 地址
+- <span id = "Master">Master</span>
+    master 对象
+  - 数据成员
+    - sync.Mutex：互斥锁
+    - address(string)：master 的 rpc 地址，即 rpc 主机地址
+    - doneChannel(chan bool)：标志任务是否全部完成
+    - newCond(*sync.Cond)：当注册 (Register) 活动发生时的信号
+    - workers([]string)：向 master 注册过的 worker 的 rpc 地址
+    - jobName(string)：当前任务名
+    - files([]string)：输入的所有文件
+    - nReduce(int)：预计的 reduce 任务数
+    - shutdown(chan struct{})：关闭 rpc 服务的标志
+    - l(net.Listener)：网络监听器，用于建立 rpc 主机
+    - stats([]int)：标识每个 worker 当前的状态，当某个元素为 0 时表示该 worker 没有获得任何任务
+  - 成员函数
+    - [forwardRegistrations](#forwardRegistrations)
+    - [run](#run)
+    - [Wait](#Wait)
+    - [killWorkers](#killWorkers)
+    - [Shutdown](#Shutdown)
+    - [startRPCServer](#startRPCServer)
+    - [stopRPCServer](#stopRPCServer)
+    - [merge](#merge)
+    - [CleanupFiles](#CleanupFiles)
+- <span id = "Worker">Worker</span>
+  - 数据成员
+    - sync.Mutex：互斥锁
+    - name(string)：rpc 地址
+    - nRPC(int)：当 RPC 的连接超过此变量时退出
+    - nTask(int)：执行任务总数
+    - concurrent(int)：目前 DoTask 的并发数量
+    - l(net.Listener)：网络监听器，接受任务
+    - parallelism(Parallelism)：检查并发
+  - 成员函数
+    - Map：具体执行 map 功能的函数，参数和返回值参考 [mapF](#mapF)
+    - Reduce：具体执行 reduce 功能的函数，参数和返回值参考 [reduceF](#reduceF)
+- <span id = "Parallelism">Parallelism</span>
+  - mu(sync.Mutex)：互斥锁
+  - now(int32)：当前并发线程数
+  - max(int32)：最大并发线程数
+
 ## 详设
 
 ### main/main.go
 
-- mapF
+- <span id = "mapF">mapF</span>
     将文件中的每个 URL 分离出来并处理成键值对
   - 参数
     - filename(string)：传入文件名
     - contents(string)：传入文件内容，每个文件内容以字符串形式进行处理
   - 返回值
-    - []mapreduce.KeyValue：返回 KeyValue 类型的切片
+    - []mapreduce.KeyValue：返回 [KeyValue](#KeyValue) 类型的切片
         即 mapF 处理每个 URL 为对应的键值对 `{word, ""}`
-- reduceF
+- <span id = "reduceF">reduceF</span>
     统计每个key值出现的次数并以 string 类型返回
   - 参数
     - key(string)：每个键值对的 word
@@ -123,7 +182,7 @@
     - reduceF(func)：参数和返回值同 main/main.go/reduceF
   - 返回值
     - mr(*Master)：完成流程的 Master 对象
-- forwardRegistrations
+- <span id = "forwardRegistrations">forwardRegistrations</span>
     通过一个 channel ch 转发当前存在的且新注册的节点的 rpc 的地址
     schedule() 通过读取 ch 了解当前 worker 的工作情况
   - 参数
@@ -149,7 +208,7 @@
     - reduceF(func)：参数和返回值同 main/main.go/reduceF
   - 返回值
     - mr(*Master)：完成流程的 Master 对象
-- run
+- <span id = "run">run</span>
     实际控制 worker 执行 mapreduce 任务
     首先将输入的文件分配到每个 mapper 上，再分配 reduce 任务，最终进行文件合并
   - 参数
@@ -161,10 +220,10 @@
         使用匿名函数，控制使所有 worker 下线并注销主机的 rpc 服务
       - 无参数和返回值
   - 无返回值
-- Wait
+- <span id = "Wait">Wait</span>
     使主线程等待至所有任务结束
   - 无参数和返回值
-- killWorkers
+- <span id = "killWorkers">killWorkers</span>
     使注册在主机的 worker 下线并返回当前 worker 完成任务的数量
   - 无参数
   - 返回值
@@ -172,25 +231,25 @@
 
 ### mapreduce/master_rpc.go
 
-- Shutdown
+- <span id = "Shutdown">Shutdown</span>
     关闭 master 的 rpc 服务
   - 参数
     - _：无要求
     - _ (*struct{})：调用时默认为 new(struct{}) 进行控制
   - 返回值
     - (error)：默认为 nil
-- stopRPCServer
-    通过 call 调用 Shutdown 函数，避免当前进程和 rpc 进程的竞争
+- <span id = "stopRPCServer">stopRPCServer</span>
+    通过 call 调用 [Shutdown](#Shutdown) 函数，避免当前进程和 rpc 进程的竞争
   - 无参数
   - 无返回值
-- startRPCServer
+- <span id = "startRPCServer">startRPCServer</span>
     开启 master 的 rpc 服务，持续接受 rpc 调用
   - 无参数
   - 无返回值
 
 ### mapreduce/master_spiltmerge.go
 
-- merge
+- <span id = "merge">merge</span>
     将多个 reduce 任务的结果合并为一个
   - 无参数
   - 无返回值
@@ -199,7 +258,7 @@
   - 参数
     - n(string)：删除文件的文件名
   - 无返回值
-- CleanupFiles
+- <span id = "CleanupFiles">CleanupFiles</span>
     清除 mapreduce 任务产生的中间文件
   - 无参数
   - 无返回值
@@ -222,7 +281,7 @@
 - DoTask
     当此 worker 被分配任务时被 master 调用
   - 参数
-    - arg(*DoTaskArgs)：分配任务的信息
+    - arg(*DoTaskArgs)：分配任务的信息，类型为 [DoTaskArgs](#DoTaskArgs)
     - _ (*struct{})：空结构体
   - 返回值
     - (error)：执行过程中有无错误，默认为 nil
@@ -231,7 +290,7 @@
     更改 rpc 连接上限（不允许 rpc 调用）
   - 参数
     - _ (*struct{})：无要求
-    - res(*ShutdownReply)：返回的参数
+    - res(*ShutdownReply)：返回的参数，类型为 [ShutdownReply](#ShutdownReply)
   - 返回值
     - (error)：错误信息，默认为 nil
 - register
@@ -247,5 +306,5 @@
     - MapFunc(func)：参数和返回值同 main/main.go/mapF
     - ReduceFunc(func)：main/main.go/reduceF
     - nRPC(int)：rpc 连接的上限
-    - parallelism(*Parallelism)：检查 worker 是否并行工作
+    - parallelism(*Parallelism)：检查 worker 是否并行工作，类型为 [Parallelism](#Parallelism)
   - 无返回值

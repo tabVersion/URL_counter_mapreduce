@@ -2,41 +2,33 @@
 
 PingCap interview
 
+使用说明和详设在 `usage&design.md` 中
+
 ## 架构说明
 
-1. 输入要求
-    为多个文件且每个均不超过128MB（数值取自Hadoop2.0）加起来可以达到10GB
+注：本程序所有的分布式情况均使用多线程进行模拟
 
-2. map/reduce
-   1. map
-        将每个URL扩展成为{key, value}的键值对，其中key为url本身，value为1表示出现一次。将处理的所有的键值对根据key进行排序并依据reducer的数量进行划分，产生中间文件
+1. 面向用户
+    1. 文件输入要求
+        为多个文件且每个均不超过128MB（数值取自Hadoop2.0）加起来可以达到10GB
 
-   2. reduce
-        合并相邻的相同的URL，最终其value的值即为这个URL在所有的文件中出现的次数。因为在map阶段对key的集合进行了划分，所以不存在相同的key值分布在不同reducer上的情况。
+    2. map/reduce
+       1. map
+            将每个URL扩展成为{key, value}的键值对，其中key为url本身，value为1表示出现一次。将处理的所有的键值对根据key进行排序并依据reducer的数量进行划分，产生中间文件
 
-3. schedule
-    不断分配map或reduce任务直到整个任务完成
+       2. reduce
+            合并相邻的相同的URL，最终其value的值即为这个URL在所有的文件中出现的次数。因为在map阶段对key的集合进行了划分，所以不存在相同的key值分布在不同reducer上的情况。
 
-        select {
-            case task := <-tasks:
-                go func() {
-                    worker := <-registerChan
-                    status := call(worker, "Worker.DoTask", constructTaskArgs(phase, task), nil)
-                    if status {
-                        success <- 1
-                        go func() { registerChan <- worker }()
-                    } else {
-                        tasks <- task
-                    }
-                }()
-            case <-success:
-                successTasks += 1
-            default:
-                if successTasks == ntasks {
-                    break loop
-                }
-            }
-    通过判断worker的返回情况决定当前任务完成或失败，若失败则将当前任务重新加入任务队列
+2. master 节点
+    主线程，同时作为 rpc 线程的主机，负责任务调度和监控，同时。与 worker 节点所有的调用都是通过 rpc 服务进行的，避免了调用失败时阻塞主线程的情况。
+3. RPC  
+    作为 master 和 worker 的中间层，负责向双方传递消息，所有的 rpc 调用都是异步的。本质是 rpc.Dail 通过双方的 **rpc 地址**进行信息交换。
+4. worker 节点  
+    单独的线程，向 rpc 主机进行注册并汇报任务完成情况。对 worker 线程的调用也是异步的。
+
+<h1><img src="架构.png"></h1>
+
+## 主调用流程
 
 ## 每日总结
 
@@ -62,6 +54,10 @@ PingCap interview
 
   ===> **不仅要关注函数的运行时情况，还要关注初始化**
 - 2.16  
-    完成所有代码部分并通过分布式的测试
+    完成所有代码部分并通过分布式的测试  
     **反思：** 在进行分布式的单元测试时只关注了工作线程之间有没有相互影响，忽视了工作线程的开启（在单元测试的线程开始部分默认已经分配好了工作，没有涉及schedule部分）
     完善文档
+- 2.17  
+    完成使用说明和详设的文档，开始写架构说明部分
+- 2.18  
+    完成全部文档，包括 readme 和 代码注释
