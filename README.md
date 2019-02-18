@@ -23,7 +23,7 @@ PingCap interview
        2. reduce
             合并相邻的相同的URL，最终其value的值即为这个URL在所有的文件中出现的次数。因为在map阶段对key的集合进行了划分，所以不存在相同的key值分布在不同reducer上的情况。
 
-2. master 节点
+2. master 节点  
     主线程，同时作为 rpc 线程的主机，负责任务调度和监控，同时。与 worker 节点所有的调用都是通过 rpc 服务进行的，避免了调用失败时阻塞主线程的情况。
 3. RPC  
     作为 master 和 worker 的中间层，负责向双方传递消息，所有的 rpc 调用都是异步的。本质是 rpc.Dail 通过双方的 **rpc 地址**进行信息交换。
