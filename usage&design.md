@@ -16,7 +16,7 @@
         | (sequential) | 运行单线程模式（只有一个worker）**debug/测试使用** |
         | data*.txt    | 输入的文件                                         |
 
-    `sort -n -k2 mrtmp.wcseq | tail -100` 用于对reducer输出的文件进行排序，并输出最后100条
+    `sort -n -k2 mrtmp.wcseq | tail -100` 用于对reducer输出的文件进行排序，并输出最后100条  
     余下的部分用于清除中间文件
 4. 单元测试（在`src/mapreduce` 目录下）  
     均在 `src/mapreduce/test_test.go` 下实现
