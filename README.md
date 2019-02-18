@@ -26,9 +26,11 @@ PingCap interview
 4. worker 节点  
     单独的线程，向 rpc 主机进行注册并汇报任务完成情况。对 worker 线程的调用也是异步的。
 
-<h1><img src="架构.png"></h1>
+<img src="架构.png">
 
 ## 主调用流程
+
+<img src = "流程图.png">
 
 ## 每日总结
 

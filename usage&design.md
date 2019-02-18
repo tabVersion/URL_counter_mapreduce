@@ -37,6 +37,7 @@
   - File(string)：仅在 map 阶段有效，输入的文件名
   - Phase(jobPhase)：当前进行什么阶段的任务 map/reduce
   - TaskNumber(int)：当前进行的任务编号
+  - NumOtherPhase(int)：另一阶段的任务数 （mapper 需要计算分成几类 reducer 需要知道要收集多少文件）
 - <span id = "ShutdownReply">ShutdownReply</span>
     当前 worker 被关闭时返回的数据
   - Ntasks(int)：当前 worker 完成的任务总数

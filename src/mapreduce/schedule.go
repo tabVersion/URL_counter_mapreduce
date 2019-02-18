@@ -46,8 +46,6 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 	}
 
 	/**
-	We don't need to use `sync.WaitGroup`.
-	Instead, worker sends back a response when it successfully execute a task.
 	The master keep polling the number of finished tasks.
 	When all tasks have finished, master can break the loop and finish schedule
 	 */
